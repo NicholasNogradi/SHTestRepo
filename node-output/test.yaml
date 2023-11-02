@@ -43,9 +43,6 @@
   } ],
   "paths" : {
     "/pet" : {
-      "get" : {
-        "tags" : [ "pet" ]
-      },
       "put" : {
         "tags" : [ "pet" ],
         "summary" : "Updated a pet",
