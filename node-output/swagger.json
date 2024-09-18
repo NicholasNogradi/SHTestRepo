@@ -22,7 +22,7 @@
   } ],
   "info" : {
     "description" : "# Introduction\n\n  This is a Simple Inventory API. \n  You can find out more about Swagger at\n  [http://swagger.io](http://swagger.io) or on\n  [irc.freenode.net, #swagger](http://swagger.io/irc/).\n\n  Here's some **bold** and *italic* text and a [link](https://example.com).\n  \n  ## Lists\n\n  Unordered list:\n  * list item\n  * another one\n\n  Ordered list:\n\n  1. One thing\n  2. Two things\n\n  ## Tables\n  Column A | Column B | Column C\n      --- | ---| ---\n       A1 | B2 | C3\n       A4 | B5 | C6\n\n  # H1\n  ## H2\n  ### H3\n  #### H4\n  ##### H5\n  ###### H6\n\n  ## Code\n\n  `Inline code` with backticks.\n  \n  ## Code block:\n    \n  ```Java\n  \n  public static void main(String[] args) {\n    System.out.println(\"Hello World\")\n  }\n  \n  ```\n\n\n ## Images\n  ![bear](https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRUWyIozVKSjvqD4JrhQJVSnngiOPKDUOzRKg&s)\n\n  ## Using HTML tags in Markdown\n\n  ### Expandable/collapsible sections\n\n  This uses HTML5 `<details>` tag, see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/details.\n\n  <details>\n      <summary>Simple API</summary>\n      <p>look at this!</p>\n  </details>\n\n  ### Buttons\n\n  This uses `<form>` + `<input type=\"{}\">`\n\n  <form action=\"https://swagger.io\" target=\"_blank\">\n      <input type=\"text\" placeholder=\"Go to swagger.io\" />\n  </form>\n",
-    "version" : "1.0.1-sample",
+    "version" : "1.0.1",
     "title" : "Simple Inventory API",
     "contact" : {
       "email" : "you@your-company.com"
