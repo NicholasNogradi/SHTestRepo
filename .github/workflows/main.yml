@@ -1,0 +1,100 @@
+name: SwaggerHub Checks
+
+on:
+  push:
+    branches:
+      - swaggerhub
+
+jobs:
+  swaggerhub:
+    runs-on: ubuntu-latest
+
+    steps:
+    # Step 1: Check out the repository
+    - name: Checkout Repository
+      uses: actions/checkout@v3
+
+    # Step 2: Set up Python environment
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.x'
+
+    # Step 3: Run SwaggerHub validation script
+    - name: Validate Swagger/OpenAPI Definition
+      run: |
+        #!/bin/bash
+        # Navigate to the folder containing the Swagger file
+        FILE_PATH=$(find . -type f -name '*.json' -o -name '*.yml' | head -n 1)
+        if [ -z "$FILE_PATH" ]; then
+          echo "No Swagger file (.json or .yml) found!"
+          exit 1
+        fi
+
+        echo "Found Swagger file at $FILE_PATH"
+        
+        # Install required Python modules
+        pip install requests
+        
+        # Run the validation script
+        python <<EOF
+import requests
+import json
+import yaml
+import sys
+
+# Load the Swagger file
+file_path = "$FILE_PATH"
+if file_path.endswith('.json'):
+    with open(file_path, 'r') as f:
+        data = json.load(f)
+elif file_path.endswith('.yml') or file_path.endswith('.yaml'):
+    with open(file_path, 'r') as f:
+        data = yaml.safe_load(f)
+else:
+    print("Unsupported file format!")
+    sys.exit(1)
+
+OWNER_ID = "NicksDemoOrg"
+api_version = data['info']['version']
+api_name = data['info']['title']
+
+# API endpoints
+url1 = f'https://api.swaggerhub.com/apis/{OWNER_ID}/{api_name}/{api_version}/settings/lifecycle'
+url2 = f'https://api.swaggerhub.com/apis/{OWNER_ID}/{api_name}/{api_version}/comments'
+url3 = f'https://api.swaggerhub.com/apis/{OWNER_ID}/{api_name}/{api_version}/standardization'
+
+headers = {'Authorization': 'febe3f85-8bab-4c99-856d-31fbc9e80a97'}
+
+# Check published status
+response = requests.get(url1, headers=headers).json()
+IS_PUBLISHED = response.get('published', False)
+
+if IS_PUBLISHED:
+    print("API is published")
+    
+    # Validate OAS specification
+    valid_oas_versions = ["3.0.1", "3.0.0", "2.0.0"]
+    if data.get('openapi') not in valid_oas_versions:
+        print("Invalid OAS Specification")
+        sys.exit(1)
+    
+    # Check for open comments
+    comments = requests.get(url2, headers=headers).json()
+    open_comments = [c for c in comments if c['status'] == 'OPEN']
+    if open_comments:
+        print("There are open comments!")
+        sys.exit(1)
+
+    # Check for standardization errors
+    standardization = requests.get(url3, headers=headers).json()
+    validation_errors = [v for v in standardization.get('validation', []) if v['severity'] == 'Critical']
+    if validation_errors:
+        print("Standardization errors are present!")
+        sys.exit(1)
+
+    print("API passed all checks.")
+else:
+    print("API is not published")
+    sys.exit(1)
+EOF
