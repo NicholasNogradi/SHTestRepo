@@ -1,100 +1,115 @@
-name: SwaggerHub Checks
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-nodejs-with-github-actions
+#
+# Workflow description: this Action will fire on every push/commit to a SwaggerHub defined branch in the repository. 
+#  The SwaggerHub branch naming convention is: "swaggerhub-<api-name>-<version> (a request to add Org name haws been opened).
+#  The work flow will extract API name and Version and then process the push to see if the API is Published.
+#  For a Published API, the workflow should create a PR with Approvers to the the develop branch.
+#
+#  Assumption: the user must be sending at least Yaml Resolved to the default location defined in the SCM integrations. 
+#
+#  m. higgins     04/07/2024  initial coding and thanks to Frank K. (1.0.0)
+#
+
+name: API CI - commit
 
 on:
-  push:
+  push: 
     branches:
-      - swaggerhub
+      - 'swaggerhub*'
+    paths:
+      - 'yaml-resolved/*'
 
 jobs:
-  swaggerhub:
+  build:
     runs-on: ubuntu-latest
-
     steps:
-    # Step 1: Check out the repository
-    - name: Checkout Repository
-      uses: actions/checkout@v3
+      - uses: actions/checkout@v2
+      - name: Use Nodejs 20.11.0
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20.11.0'    
+          
+# install required tooling    
+      - name: Install jq utility
+        run: sudo apt-get --yes --quiet install jq
 
-    # Step 2: Set up Python environment
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.x'
+      - name: Install Dependencies
+        run: npm install   
 
-    # Step 3: Run SwaggerHub validation script
-    - name: Validate Swagger/OpenAPI Definition
-      run: |
-        #!/bin/bash
-        # Navigate to the folder containing the Swagger file
-        FILE_PATH=$(find . -type f -name '*.json' -o -name '*.yml' | head -n 1)
-        if [ -z "$FILE_PATH" ]; then
-          echo "No Swagger file (.json or .yml) found!"
-          exit 1
-        fi
+      - name: Prepare scripts for execution
+        run: |
+          chmod +x ./scripts/api_metadata.sh
+          chmod +x ./scripts/cicd_get_version.sh
+          chmod +x ./scripts/cicd_check_validation.sh
+          chmod +x ./scripts/cicd_check_comments.sh
+          chmod +x ./scripts/cicd_spec_validator.sh
 
-        echo "Found Swagger file at $FILE_PATH"
+##########################################################################################################################################
+          
+# get the API Version from the yaml source file in yanl-resolved/swagger.yaml           
+      - name: Get the API Version
+        run: |
+          VER=$(./scripts/cicd_get_version.sh $SPEC_LOCATION/swagger.yaml yaml | jq .version | tr -d '"')
+          echo "VER=$VER" >> $GITHUB_ENV
+
+# remove the version string and "swaggerhub" string from the branch name to get the api name
+      - name: Get the api file name
+        run: |
+          WORK=$(sed "s/-$VER//" <<< $GITHUB_BRANCH)
+          API=$(sed "s/swaggerhub-//" <<< $WORK)
+          echo "API=$API" >> $GITHUB_ENV
+      
+# ok, so how do i get ORG ???
+#
+#
+
+# report what we know
+      - name: Report API identification
+        run: |
+          echo "org     ---> $ORG"
+          echo "api     ---> $API"
+          echo "version ---> $VER"
+
+# display all the meta-data for the API
+      - name: Display all meta-data    
+        run: |
+          ./scripts/api_metadata.sh $ORG $API $VER
+
+# is this a commit of a Published API ?
+      - name: Set environment variable from script output
+        run: |
+          IS_PUBLISHED=$(./scripts/api_metadata.sh $ORG $API $VER | jq -r .is_published)
+          echo "IS_PUBLISHED=$IS_PUBLISHED" >> $GITHUB_ENV
+       
+# if Published = true do the basic Sanity checks
+      - name: Basic Sanity checks
+        if: ${{ env.IS_PUBLISHED == 'true' }} 
+        run: | 
+          ./scripts/cicd_spec_validator.sh $ORG $API $VER
+          ./scripts/cicd_check_comments.sh $ORG $API $VER
+          ./scripts/cicd_check_validation.sh $ORG $API $VER
+
+# if Published = true PR to the develop branch
+      - name: API is Published - PR triggered
+        if: ${{ env.IS_PUBLISHED == 'true' }} 
+        uses: actions/checkout@v2
         
-        # Install required Python modules
-        pip install requests
-        
-        # Run the validation script
-        python <<EOF
-import requests
-import json
-import yaml
-import sys
+      - name: Create pull-request to develop branch
+        if: ${{ env.IS_PUBLISHED == 'true' }} 
+        uses: repo-sync/pull-request@v2
+        with:
+          github_token: ${{ secrets.GH_TOKEN }}
+          destination_branch: "develop"
+          pr_label: "GitHubAction"
+          pr_title: "PR for published API commit: ${{ env.ORG }} / ${{ env.API }} / ${{ env.VER }}"
+          pr_reviewer: pw-syzygy
+          pr_assignee: mhiggins-sa
 
-# Load the Swagger file
-file_path = "$FILE_PATH"
-if file_path.endswith('.json'):
-    with open(file_path, 'r') as f:
-        data = json.load(f)
-elif file_path.endswith('.yml') or file_path.endswith('.yaml'):
-    with open(file_path, 'r') as f:
-        data = yaml.safe_load(f)
-else:
-    print("Unsupported file format!")
-    sys.exit(1)
+# define the environment
+    env:
+      GITHUB_BRANCH: ${{ github.ref_name }}
+      HOME: ${{ './scripts' }}
+      SPEC_LOCATION: ${{ './yaml-resolved/' }}
+      ORG: ${{ 'SmartBear_Org' }}
 
-OWNER_ID = "NicksDemoOrg"
-api_version = data['info']['version']
-api_name = data['info']['title']
 
-# API endpoints
-url1 = f'https://api.swaggerhub.com/apis/{OWNER_ID}/{api_name}/{api_version}/settings/lifecycle'
-url2 = f'https://api.swaggerhub.com/apis/{OWNER_ID}/{api_name}/{api_version}/comments'
-url3 = f'https://api.swaggerhub.com/apis/{OWNER_ID}/{api_name}/{api_version}/standardization'
-
-headers = {'Authorization': 'febe3f85-8bab-4c99-856d-31fbc9e80a97'}
-
-# Check published status
-response = requests.get(url1, headers=headers).json()
-IS_PUBLISHED = response.get('published', False)
-
-if IS_PUBLISHED:
-    print("API is published")
-    
-    # Validate OAS specification
-    valid_oas_versions = ["3.0.1", "3.0.0", "2.0.0"]
-    if data.get('openapi') not in valid_oas_versions:
-        print("Invalid OAS Specification")
-        sys.exit(1)
-    
-    # Check for open comments
-    comments = requests.get(url2, headers=headers).json()
-    open_comments = [c for c in comments if c['status'] == 'OPEN']
-    if open_comments:
-        print("There are open comments!")
-        sys.exit(1)
-
-    # Check for standardization errors
-    standardization = requests.get(url3, headers=headers).json()
-    validation_errors = [v for v in standardization.get('validation', []) if v['severity'] == 'Critical']
-    if validation_errors:
-        print("Standardization errors are present!")
-        sys.exit(1)
-
-    print("API passed all checks.")
-else:
-    print("API is not published")
-    sys.exit(1)
-EOF
