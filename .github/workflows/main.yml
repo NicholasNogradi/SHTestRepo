@@ -15,9 +15,9 @@ name: API CI - commit
 on:
   push: 
     branches:
-      - 'swaggerhub*'
+      - '**swaggerhub**'
     paths:
-      - 'yaml-resolved/*'
+      - 'yaml-resolved/**/*'
 
 jobs:
   build:
@@ -110,6 +110,6 @@ jobs:
       GITHUB_BRANCH: ${{ github.ref_name }}
       HOME: ${{ './scripts' }}
       SPEC_LOCATION: ${{ './yaml-resolved/' }}
-      ORG: ${{ 'SmartBear_Org' }}
+      ORG: ${{ 'NicksDemoOrg' }}
 
 
