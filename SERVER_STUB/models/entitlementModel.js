@@ -16,12 +16,23 @@ class EntitlementModel {
     try {
       // Extract fields from the entitlement object
       const {
-        csp_ID, quantity, activation_date, end_date, is_eval,
-        entitlement_version, entitlement_group_ID, uom, product_type,
-        term, source_ID, sku, ship_date, start_date, status
+        csp_ID = null, 
+        quantity = null, 
+        activation_date = null, 
+        end_date = null, 
+        is_eval = false,
+        entitlement_version = null, 
+        entitlement_group_ID = null, 
+        uom = null, 
+        product_type = null,
+        term = null, 
+        source_ID = null, 
+        sku = null, 
+        ship_date = null, 
+        start_date = null, 
+        status = 'PENDING'
       } = entitlement;
 
-      // Insert the new entitlement
       const [result] = await pool.execute(
         `INSERT INTO entitlements (
           csp_ID, quantity, activation_date, end_date, is_eval,
@@ -31,7 +42,7 @@ class EntitlementModel {
         [
           csp_ID, quantity, activation_date, end_date, is_eval,
           entitlement_version, entitlement_group_ID, uom, product_type,
-          term, source_ID, sku, ship_date, start_date, status || 'PENDING'
+          term, source_ID, sku, ship_date, start_date, status
         ]
       );
 

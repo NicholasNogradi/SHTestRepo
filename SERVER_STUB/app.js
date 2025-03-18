@@ -5,6 +5,8 @@ const path = require('path');
 const fs = require('fs');
 const YAML = require('yamljs');
 const swaggerUi = require('swagger-ui-express');
+const cors = require('cors');
+
 
 // Import routes
 const entitlementRoutes = require('./routes/entitlementRoutes');
@@ -18,6 +20,15 @@ const app = express();
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+app.use((req, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin', 'http://localhost:3000'); // Allow frontend origin
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE, OPTIONS'); // Allowed methods
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization'); // Allowed headers
+  res.setHeader('Access-Control-Allow-Credentials', 'true'); // Allow credentials (if needed)
+  next();
+});
+
 
 // API routes
 app.use('/entitlements', entitlementRoutes);
@@ -97,6 +108,12 @@ app.get('/', (req, res) => {
     </html>
   `);
 });
+
+app.use(cors({
+  origin: 'http://localhost:3000', // Allow requests from your frontend
+  methods: 'GET,POST,PATCH,DELETE,OPTIONS',
+  allowedHeaders: 'Content-Type,Authorization'
+}));
 
 // 404 handler
 app.use((req, res) => {
