@@ -1,7 +1,7 @@
 {
   "openapi" : "3.0.3",
   "info" : {
-    "title" : "Entitlement API Service",
+    "title" : "Entitlement API Service For Products",
     "description" : "# Entitlement API Documentation\n\nAPI for managing entitlements following AIP standards.\n",
     "version" : "v1"
   },
