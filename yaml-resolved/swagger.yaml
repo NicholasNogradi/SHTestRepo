@@ -1,6 +1,6 @@
 openapi: 3.0.3
 info:
-  title: Entitlement API
+  title: Entitlement API for Products
   description: API for managing entitlements following AIP standards.
   version: v1
 servers:
