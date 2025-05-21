@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "prestart": "npm install",
-    "start": "node server.js"
+    "start": "node server.js",
+    "test:provider": "mocha /Users/nicholas.nogradi/Desktop/SHTESTREPO/SERVER_STUB/tests/entitlement.pact.test.js"
   },
   "keywords": [
     "swagger"
@@ -13,11 +14,13 @@
   "license": "Unlicense",
   "private": true,
   "dependencies": {
+    "@pact-foundation/pact": "^15.0.1",
     "connect": "^3.2.0",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "js-yaml": "^3.3.0",
+    "mocha": "^11.4.0",
     "mysql2": "^3.13.0",
     "swagger-ui-express": "^5.0.1",
     "yamljs": "^0.3.0"
