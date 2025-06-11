@@ -3,6 +3,16 @@
 var utils = require('../utils/writer.js');
 var Entitlements = require('../service/EntitlementsService');
 
+module.exports.createEntitlement = function createEntitlement (req, res, next, body) {
+  Entitlements.createEntitlement(body)
+    .then(function (response) {
+      utils.writeJson(res, response);
+    })
+    .catch(function (response) {
+      utils.writeJson(res, response);
+    });
+};
+
 module.exports.getEntitlements = function getEntitlements (req, res, next, limit, offset, count, total) {
   Entitlements.getEntitlements(limit, offset, count, total)
     .then(function (response) {

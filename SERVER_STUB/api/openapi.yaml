@@ -65,6 +65,25 @@ paths:
                       name: Entitlement 2
                       description: Description for entitlement 2
       x-swagger-router-controller: Entitlements
+    post:
+      tags:
+      - Entitlements
+      summary: Create an entitlement record
+      operationId: createEntitlement
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Entitlement"
+        required: true
+      responses:
+        "201":
+          description: Entitlement created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Entitlement"
+      x-swagger-router-controller: Entitlements
     patch:
       tags:
       - Entitlements

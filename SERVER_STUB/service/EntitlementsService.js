@@ -2,6 +2,42 @@
 
 
 /**
+ * Create an entitlement record
+ *
+ * body Entitlement 
+ * returns Entitlement
+ **/
+exports.createEntitlement = function(body) {
+  return new Promise(function(resolve, reject) {
+    var examples = {};
+    examples['application/json'] = {
+  "end_date" : "2000-01-23",
+  "csp_ID" : "csp_ID",
+  "quantity" : 2,
+  "activation_date" : "2000-01-23",
+  "is_eval" : true,
+  "entitlementID" : 5,
+  "entitlement_version" : "entitlement_version",
+  "entitlement_group_ID" : "entitlement_group_ID",
+  "uom" : "uom",
+  "product_type" : "product_type",
+  "term" : "term",
+  "source_ID" : "source_ID",
+  "sku" : "sku",
+  "ship_date" : "2000-01-23",
+  "start_date" : "2000-01-23",
+  "status" : "FULFILLED"
+};
+    if (Object.keys(examples).length > 0) {
+      resolve(examples[Object.keys(examples)[0]]);
+    } else {
+      resolve();
+    }
+  });
+}
+
+
+/**
  * Retrieve entitlement records based on filter criteria
  *
  * limit Integer The number of items to return (optional)
