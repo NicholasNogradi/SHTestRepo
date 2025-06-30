@@ -1,0 +1,65 @@
+name: Clean OpenAPI Specs
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - '**/*.yaml'
+      - '**/*.yml'
+      - '**/*.json'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - '**/*.yaml'
+      - '**/*.yml'
+      - '**/*.json'
+
+jobs:
+  clean-specs:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        
+    - name: Install Redocly CLI
+      run: npm install -g @redocly/cli
+      
+    - name: Create Redocly config
+      run: |
+        cat > redocly.yaml << EOF
+        apis:
+          main:
+            root: ./openapi.yaml
+        decorators:
+          remove-x-internal:
+            remove-x-internal: true
+        EOF
+        
+    - name: Clean OpenAPI specs (remove x-internal)
+      run: |
+        # Find all OpenAPI spec files
+        find . -name "*.yaml" -o -name "*.yml" -o -name "*.json" | grep -E "(openapi|swagger)" | while read file; do
+          echo "Processing $file"
+          redocly bundle "$file" --output "cleaned-$(basename "$file")" --config redocly.yaml
+        done
+        
+    - name: Validate cleaned specs
+      run: |
+        find . -name "cleaned-*.yaml" -o -name "cleaned-*.yml" -o -name "cleaned-*.json" | while read file; do
+          echo "Validating $file"
+          redocly lint "$file"
+        done
+        
+    - name: Upload cleaned specs as artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: cleaned-openapi-specs
+        path: cleaned-*
+        retention-days: 30
