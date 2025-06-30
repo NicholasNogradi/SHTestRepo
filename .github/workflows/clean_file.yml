@@ -66,4 +66,4 @@ jobs:
       with:
         name: cleaned-openapi-specs
         path: ./cleaned-specs/
-        retention-days: 30
+        retention-days: 45
