@@ -74,7 +74,7 @@ jobs:
     #       redocly lint "$file"
     #     done
         
-    - name: Publish to SwaggerHub
+       - name: Publish to SwaggerHub
       env:
         SWAGGERHUB_API_KEY: ${{ secrets.SWAGGERHUB_API_KEY }}
         SWAGGERHUB_OWNER: ${{ vars.SWAGGERHUB_OWNER }}
@@ -84,28 +84,21 @@ jobs:
           exit 1
         fi
         
-        # Process each cleaned spec file
+        api_name="Entitlements"  # Fixed API name
+        
         find ./cleaned-specs -name "*.yaml" -o -name "*.yml" -o -name "*.json" | while read file; do
           echo "Publishing $file to SwaggerHub..."
-          
-          # Extract API name and version from the spec file
-          filename=$(basename "$file" | sed 's/\.[^.]*$//')
-          
-          # Try to extract version from the OpenAPI spec
+
           if [[ "$file" == *.json ]]; then
             base_version=$(jq -r '.info.version // "1.0.0"' "$file")
-            api_name=$(jq -r '.info.title // "'$filename'"' "$file" | sed 's/[^a-zA-Z0-9_-]/_/g')
           else
             base_version=$(yq eval '.info.version // "1.0.0"' "$file")
-            api_name=$(yq eval '.info.title // "'$filename'"' "$file" | sed 's/[^a-zA-Z0-9_-]/_/g')
           fi
           
-          # Create public version name
           version="${base_version}-public"
-          
-          echo "API Name: $api_name, Base Version: $base_version, Public Version: $version"
-          
-          # Upload to SwaggerHub Registry API as new public version
+
+          echo "Using API Name: $api_name, Version: $version"
+
           curl -X POST \
             "https://api.swaggerhub.com/apis/$SWAGGERHUB_OWNER/$api_name?version=$version" \
             -H "Authorization: $SWAGGERHUB_API_KEY" \
@@ -113,27 +106,26 @@ jobs:
             -H "Accept: application/json" \
             --data-binary "@$file" \
             --fail-with-body
-            
+
           if [ $? -eq 0 ]; then
             echo "✅ Successfully uploaded $api_name v$version to SwaggerHub"
-            
-            # Set the version as public and published
-            echo "Setting version $version as public and published..."
+
             curl -X PUT \
               "https://api.swaggerhub.com/apis/$SWAGGERHUB_OWNER/$api_name/$version/settings/lifecycle" \
               -H "Authorization: $SWAGGERHUB_API_KEY" \
               -H "Content-Type: application/json" \
               -d '{"published": true, "visibility": "public"}' \
               --fail-with-body
-              
+
             if [ $? -eq 0 ]; then
               echo "✅ Successfully published version $version"
             else
-              echo "⚠️ Failed to publish version $version (API uploaded but not published)"
+              echo "⚠️ Uploaded but failed to publish $version"
             fi
           else
-            echo "❌ Failed to upload $api_name to SwaggerHub"
+            echo "❌ Failed to upload version $version of $api_name"
           fi
-          
+
           echo "---"
         done
+
