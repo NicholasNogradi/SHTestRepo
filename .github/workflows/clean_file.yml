@@ -6,11 +6,13 @@ on:
     paths:
       - '**/*.yaml'
       - '**/*.yml'
+      - '**/*.json'
   pull_request:
     branches: [ main ]
     paths:
       - '**/*.yaml'
       - '**/*.yml'
+      - '**/*.json'
 
 jobs:
   clean-specs:
@@ -26,8 +28,12 @@ jobs:
         node-version: '18'
         cache: 'npm'
         
-    - name: Install Redocly CLI
-      run: npm install -g @redocly/cli
+    - name: Install dependencies
+      run: |
+        npm install -g @redocly/cli
+        # Install yq for YAML parsing
+        sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
+        sudo chmod +x /usr/local/bin/yq
       
     - name: Create Redocly config
       run: |
@@ -61,16 +67,70 @@ jobs:
             fi
           done
         
-    # - name: Validate cleaned specs
-    #   run: |
-    #     find ./cleaned-specs -name "*.yaml" -o -name "*.yml" -o -name "*.json" | while read file; do
-    #       echo "Validating $file"
-    #       redocly lint "$file"
-    #     done
+    - name: Validate cleaned specs
+      run: |
+        find ./cleaned-specs -name "*.yaml" -o -name "*.yml" -o -name "*.json" | while read file; do
+          echo "Validating $file"
+          redocly lint "$file"
+        done
         
-    - name: Upload cleaned specs as artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: cleaned-openapi-specs
-        path: ./cleaned-specs/
-        retention-days: 30
+    - name: Publish to SwaggerHub
+      env:
+        SWAGGERHUB_API_KEY: ${{ secrets.SWAGGERHUB_API_KEY }}
+        SWAGGERHUB_OWNER: ${{ vars.SWAGGERHUB_OWNER }}
+      run: |
+        if [ -z "$SWAGGERHUB_API_KEY" ] || [ -z "$SWAGGERHUB_OWNER" ]; then
+          echo "Error: SWAGGERHUB_API_KEY secret and SWAGGERHUB_OWNER variable must be set"
+          exit 1
+        fi
+        
+        # Process each cleaned spec file
+        find ./cleaned-specs -name "*.yaml" -o -name "*.yml" -o -name "*.json" | while read file; do
+          echo "Publishing $file to SwaggerHub..."
+          
+          # Extract API name and version from the spec file
+          filename=$(basename "$file" | sed 's/\.[^.]*$//')
+          
+          # Try to extract version from the OpenAPI spec
+          if [[ "$file" == *.json ]]; then
+            version=$(jq -r '.info.version // "1.0.0"' "$file")
+            api_name=$(jq -r '.info.title // "'$filename'"' "$file" | sed 's/[^a-zA-Z0-9_-]/_/g')
+          else
+            version=$(yq eval '.info.version // "1.0.0"' "$file")
+            api_name=$(yq eval '.info.title // "'$filename'"' "$file" | sed 's/[^a-zA-Z0-9_-]/_/g')
+          fi
+          
+          echo "API Name: $api_name, Version: $version"
+          
+          # Upload to SwaggerHub Registry API
+          curl -X POST \
+            "https://api.swaggerhub.com/apis/$SWAGGERHUB_OWNER/$api_name/$version" \
+            -H "Authorization: $SWAGGERHUB_API_KEY" \
+            -H "Content-Type: application/json" \
+            -H "Accept: application/json" \
+            --data-binary "@$file" \
+            --fail-with-body
+            
+          if [ $? -eq 0 ]; then
+            echo "✅ Successfully published $api_name v$version to SwaggerHub"
+            
+            # Optionally publish the version (make it read-only)
+            echo "Publishing version $version..."
+            curl -X PUT \
+              "https://api.swaggerhub.com/apis/$SWAGGERHUB_OWNER/$api_name/$version/settings/lifecycle" \
+              -H "Authorization: $SWAGGERHUB_API_KEY" \
+              -H "Content-Type: application/json" \
+              -d '{"published": true}' \
+              --fail-with-body
+              
+            if [ $? -eq 0 ]; then
+              echo "✅ Successfully published version $version"
+            else
+              echo "⚠️ Failed to publish version $version (API uploaded but not published)"
+            fi
+          else
+            echo "❌ Failed to upload $api_name to SwaggerHub"
+          fi
+          
+          echo "---"
+        done
