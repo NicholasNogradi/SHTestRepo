@@ -6,13 +6,13 @@ on:
     paths:
       - '**/*.yaml'
       - '**/*.yml'
-      - '**/*.json'
+    
   pull_request:
     branches: [ main ]
     paths:
       - '**/*.yaml'
       - '**/*.yml'
-      - '**/*.json'
+    
 
 jobs:
   clean-specs:
@@ -42,17 +42,21 @@ jobs:
             remove-x-internal: true
         EOF
         
+    - name: Create output directory
+      run: mkdir -p ./cleaned-specs
+        
     - name: Clean OpenAPI specs (remove x-internal)
       run: |
         # Find all OpenAPI spec files
         find . -name "*.yaml" -o -name "*.yml" -o -name "*.json" | grep -E "(openapi|swagger)" | while read file; do
           echo "Processing $file"
-          redocly bundle "$file" --output "cleaned-$(basename "$file")" --config redocly.yaml
+          filename=$(basename "$file")
+          redocly bundle "$file" --output "./cleaned-specs/$filename" --config redocly.yaml
         done
         
     - name: Validate cleaned specs
       run: |
-        find . -name "cleaned-*.yaml" -o -name "cleaned-*.yml" -o -name "cleaned-*.json" | while read file; do
+        find ./cleaned-specs -name "*.yaml" -o -name "*.yml" -o -name "*.json" | while read file; do
           echo "Validating $file"
           redocly lint "$file"
         done
@@ -61,5 +65,5 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: cleaned-openapi-specs
-        path: cleaned-*
+        path: ./cleaned-specs/
         retention-days: 30
