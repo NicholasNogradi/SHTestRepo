@@ -104,10 +104,10 @@ jobs:
           echo "API Name: $api_name, Base Version: $base_version, Public Version: $version"
           
           # Upload to SwaggerHub Registry API as new public version
-          curl -X POST \
+          curl -X PUT \
             "https://api.swaggerhub.com/apis/$SWAGGERHUB_OWNER/$api_name/$version" \
             -H "Authorization: $SWAGGERHUB_API_KEY" \
-            -H "Content-Type: application/json" \
+            -H "Content-Type: application/yaml" \
             -H "Accept: application/json" \
             --data-binary "@$file" \
             --fail-with-body
