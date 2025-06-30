@@ -74,7 +74,7 @@ jobs:
     #       redocly lint "$file"
     #     done
         
-       - name: Publish to SwaggerHub
+    - name: Publish to SwaggerHub
       env:
         SWAGGERHUB_API_KEY: ${{ secrets.SWAGGERHUB_API_KEY }}
         SWAGGERHUB_OWNER: ${{ vars.SWAGGERHUB_OWNER }}
