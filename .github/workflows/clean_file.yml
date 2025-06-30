@@ -47,12 +47,21 @@ jobs:
         
     - name: Clean OpenAPI specs (remove x-internal)
       run: |
-        # Find all OpenAPI spec files
-        find . -name "*.yaml" -o -name "*.yml" -o -name "*.json" | grep -E "(openapi|swagger)" | while read file; do
-          echo "Processing $file"
-          filename=$(basename "$file")
-          redocly bundle "$file" --output "./cleaned-specs/$filename" --config redocly.yaml
-        done
+        # Find OpenAPI spec files (exclude node_modules and common non-spec directories)
+        find . -path "*/node_modules" -prune -o -path "*/.git" -prune -o \
+          \( -name "*.yaml" -o -name "*.yml" -o -name "*.json" \) -print | \
+          grep -E "(openapi|swagger|api)" | \
+          while read file; do
+            echo "Checking $file for OpenAPI specification..."
+            # Check if file contains OpenAPI/Swagger indicators
+            if grep -q -E "(openapi:|swagger:|\"openapi\":|\"swagger\":)" "$file" 2>/dev/null; then
+              echo "Processing OpenAPI spec: $file"
+              filename=$(basename "$file")
+              redocly bundle "$file" --output "./cleaned-specs/$filename" --config redocly.yaml
+            else
+              echo "Skipping $file (not an OpenAPI specification)"
+            fi
+          done
         
     - name: Validate cleaned specs
       run: |
