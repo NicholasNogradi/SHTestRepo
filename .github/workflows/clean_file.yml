@@ -6,11 +6,13 @@ on:
     paths:
       - '**/*.yaml'
       - '**/*.yml'
+      
   pull_request:
     branches: [ main ]
     paths:
       - '**/*.yaml'
       - '**/*.yml'
+  
 
 jobs:
   clean-specs:
@@ -104,8 +106,8 @@ jobs:
           echo "API Name: $api_name, Base Version: $base_version, Public Version: $version"
           
           # Upload to SwaggerHub Registry API as new public version
-          curl -X PUT \
-            "https://api.swaggerhub.com/apis/$SWAGGERHUB_OWNER/$api_name/$version" \
+          curl -X POST \
+            "https://api.swaggerhub.com/apis/$SWAGGERHUB_OWNER/$api_name?version=$version" \
             -H "Authorization: $SWAGGERHUB_API_KEY" \
             -H "Content-Type: application/yaml" \
             -H "Accept: application/json" \
