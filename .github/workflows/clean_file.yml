@@ -91,16 +91,19 @@ jobs:
           
           # Try to extract version from the OpenAPI spec
           if [[ "$file" == *.json ]]; then
-            version=$(jq -r '.info.version // "1.0.0"' "$file")
+            base_version=$(jq -r '.info.version // "1.0.0"' "$file")
             api_name=$(jq -r '.info.title // "'$filename'"' "$file" | sed 's/[^a-zA-Z0-9_-]/_/g')
           else
-            version=$(yq eval '.info.version // "1.0.0"' "$file")
+            base_version=$(yq eval '.info.version // "1.0.0"' "$file")
             api_name=$(yq eval '.info.title // "'$filename'"' "$file" | sed 's/[^a-zA-Z0-9_-]/_/g')
           fi
           
-          echo "API Name: $api_name, Version: $version"
+          # Create public version name
+          version="${base_version}-public"
           
-          # Upload to SwaggerHub Registry API
+          echo "API Name: $api_name, Base Version: $base_version, Public Version: $version"
+          
+          # Upload to SwaggerHub Registry API as new public version
           curl -X POST \
             "https://api.swaggerhub.com/apis/$SWAGGERHUB_OWNER/$api_name/$version" \
             -H "Authorization: $SWAGGERHUB_API_KEY" \
@@ -110,15 +113,15 @@ jobs:
             --fail-with-body
             
           if [ $? -eq 0 ]; then
-            echo "✅ Successfully published $api_name v$version to SwaggerHub"
+            echo "✅ Successfully uploaded $api_name v$version to SwaggerHub"
             
-            # Optionally publish the version (make it read-only)
-            echo "Publishing version $version..."
+            # Set the version as public and published
+            echo "Setting version $version as public and published..."
             curl -X PUT \
               "https://api.swaggerhub.com/apis/$SWAGGERHUB_OWNER/$api_name/$version/settings/lifecycle" \
               -H "Authorization: $SWAGGERHUB_API_KEY" \
               -H "Content-Type: application/json" \
-              -d '{"published": true}' \
+              -d '{"published": true, "visibility": "public"}' \
               --fail-with-body
               
             if [ $? -eq 0 ]; then
