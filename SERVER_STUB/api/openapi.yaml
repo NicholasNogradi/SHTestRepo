@@ -1,0 +1,289 @@
+openapi: 3.0.3
+info:
+  title: Entitlement API
+  description: API for managing entitlements following AIP standards.
+  version: v1
+servers:
+- url: https://api.example.com/v1
+tags:
+- name: Entitlements
+paths:
+  /entitlements:
+    get:
+      tags:
+      - Entitlements
+      summary: Retrieve entitlement records based on filter criteria
+      operationId: getEntitlements
+      parameters:
+      - name: limit
+        in: query
+        description: The number of items to return
+        schema:
+          maximum: 100
+          minimum: 1
+          type: integer
+          format: int32
+          default: 20
+      - name: offset
+        in: query
+        description: The number of items to skip before returning the results
+        schema:
+          minimum: 0
+          type: integer
+      - name: count
+        in: query
+        description: The count of items returned
+        schema:
+          type: integer
+      - name: total
+        in: query
+        schema:
+          type: integer
+      responses:
+        "200":
+          description: List of entitlements matching criteria
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inline_response_200'
+      x-swagger-router-controller: Entitlements
+    post:
+      tags:
+      - Entitlements
+      summary: Create an entitlement record
+      operationId: createEntitlement
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Entitlement'
+        required: true
+      responses:
+        "201":
+          description: Entitlement created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Entitlement'
+      x-swagger-router-controller: Entitlements
+  /entitlements/{entitlementID}:
+    get:
+      tags:
+      - Entitlements
+      summary: Retrieve one Entitlement record by ID
+      operationId: getEntitlementById
+      parameters:
+      - name: entitlementID
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: integer
+      responses:
+        "200":
+          description: Entitlement record retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Entitlement'
+      x-swagger-router-controller: Entitlements
+    patch:
+      tags:
+      - Entitlements
+      summary: Update an entitlement record
+      operationId: updateEntitlement
+      parameters:
+      - name: entitlementID
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: integer
+      - name: updateMask
+        in: query
+        required: true
+        style: form
+        explode: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Entitlement'
+        required: true
+      responses:
+        "200":
+          description: Entitlement updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Entitlement'
+      x-swagger-router-controller: Entitlements
+  /entitlements/search:
+    post:
+      tags:
+      - Entitlements
+      summary: Search entitlement records
+      operationId: searchEntitlements
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/entitlementssearch_body'
+        required: true
+      responses:
+        "200":
+          description: Search results
+      x-swagger-router-controller: Entitlements
+components:
+  schemas:
+    Entitlement:
+      type: object
+      properties:
+        entitlementID:
+          type: integer
+        entitlement_group_ID:
+          type: string
+        entitlement_version:
+          type: string
+        sku:
+          type: string
+        ship_date:
+          type: string
+          format: date
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+        activation_date:
+          type: string
+          format: date
+        status:
+          type: string
+          enum:
+          - FULFILLED
+          - PENDING
+          - CANCELED
+        quantity:
+          type: integer
+        csp_ID:
+          type: string
+        term:
+          type: string
+        product_type:
+          type: string
+        source_ID:
+          type: string
+        is_eval:
+          type: boolean
+        uom:
+          type: string
+      example:
+        end_date: 2000-01-23
+        csp_ID: csp_ID
+        quantity: 2
+        activation_date: 2000-01-23
+        is_eval: true
+        entitlementID: 5
+        entitlement_version: entitlement_version
+        entitlement_group_ID: entitlement_group_ID
+        uom: uom
+        product_type: product_type
+        term: term
+        source_ID: source_ID
+        sku: sku
+        ship_date: 2000-01-23
+        start_date: 2000-01-23
+        status: FULFILLED
+    inline_response_200:
+      type: object
+      properties:
+        limit:
+          type: integer
+        offset:
+          type: integer
+        count:
+          type: integer
+        total:
+          type: integer
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Entitlement'
+      example:
+        total: 5
+        offset: 6
+        data:
+        - end_date: 2000-01-23
+          csp_ID: csp_ID
+          quantity: 2
+          activation_date: 2000-01-23
+          is_eval: true
+          entitlementID: 5
+          entitlement_version: entitlement_version
+          entitlement_group_ID: entitlement_group_ID
+          uom: uom
+          product_type: product_type
+          term: term
+          source_ID: source_ID
+          sku: sku
+          ship_date: 2000-01-23
+          start_date: 2000-01-23
+          status: FULFILLED
+        - end_date: 2000-01-23
+          csp_ID: csp_ID
+          quantity: 2
+          activation_date: 2000-01-23
+          is_eval: true
+          entitlementID: 5
+          entitlement_version: entitlement_version
+          entitlement_group_ID: entitlement_group_ID
+          uom: uom
+          product_type: product_type
+          term: term
+          source_ID: source_ID
+          sku: sku
+          ship_date: 2000-01-23
+          start_date: 2000-01-23
+          status: FULFILLED
+        limit: 0
+        count: 1
+    entitlementssearch_body:
+      type: object
+      properties:
+        filter:
+          type: string
+  parameters:
+    limitParam:
+      name: limit
+      in: query
+      description: The number of items to return
+      schema:
+        maximum: 100
+        minimum: 1
+        type: integer
+        format: int32
+        default: 20
+    offsetParam:
+      name: offset
+      in: query
+      description: The number of items to skip before returning the results
+      schema:
+        minimum: 0
+        type: integer
+    countParam:
+      name: count
+      in: query
+      description: The count of items returned
+      schema:
+        type: integer
+    totalParam:
+      name: total
+      in: query
+      schema:
+        type: integer

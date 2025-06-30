@@ -1,0 +1,219 @@
+{
+  "openapi" : "3.0.3",
+  "info" : {
+    "title" : "Entitlement API Service For Products",
+    "description" : "# Entitlement API Documentation\n\nAPI for managing entitlements following AIP standards.\n",
+    "version" : "v1"
+  },
+  "servers" : [ {
+    "description" : "SwaggerHub API Auto Mocking",
+    "url" : "https://virtserver.swaggerhub.com/NicksDemoOrg/Entitlements/v1"
+  }, {
+    "url" : "https://api.example.com/v1"
+  } ],
+  "tags" : [ {
+    "name" : "Entitlements"
+  } ],
+  "paths" : {
+    "/entitlements" : {
+      "post" : {
+        "tags" : [ "Entitlements" ],
+        "summary" : "Create an entitlement record",
+        "operationId" : "createEntitlement",
+        "requestBody" : {
+          "required" : true,
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "https://api.swaggerhub.com/domains/NicksDemoOrg/GlobalComponentsPaloAlto/v1#/components/schemas/Entitlement"
+              }
+            },
+            "application/xml" : {
+              "schema" : {
+                "type" : "object",
+                "properties" : {
+                  "" : {
+                    "type" : "string",
+                    "x-stoplight" : {
+                      "id" : "830ow6qmx67ur"
+                    },
+                    "format" : "uuid"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Entitlement created successfully",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "https://api.swaggerhub.com/domains/NicksDemoOrg/GlobalComponentsPaloAlto/v1#/components/schemas/Entitlement"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get" : {
+        "tags" : [ "Entitlements" ],
+        "summary" : "Retrieve entitlement records based on filter criteria",
+        "operationId" : "getEntitlements",
+        "parameters" : [ {
+          "$ref" : "https://api.swaggerhub.com/domains/NicksDemoOrg/GlobalComponentsPaloAlto/v1#/components/parameters/limitParam"
+        }, {
+          "$ref" : "https://api.swaggerhub.com/domains/NicksDemoOrg/GlobalComponentsPaloAlto/v1#/components/parameters/offsetParam"
+        }, {
+          "$ref" : "https://api.swaggerhub.com/domains/NicksDemoOrg/GlobalComponentsPaloAlto/v1#/components/parameters/countParam"
+        }, {
+          "$ref" : "https://api.swaggerhub.com/domains/NicksDemoOrg/GlobalComponentsPaloAlto/v1#/components/parameters/totalParam"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "List of entitlements matching criteria",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object",
+                  "properties" : {
+                    "limit" : {
+                      "type" : "integer"
+                    },
+                    "offset" : {
+                      "type" : "integer"
+                    },
+                    "count" : {
+                      "type" : "integer"
+                    },
+                    "total" : {
+                      "type" : "integer"
+                    },
+                    "data" : {
+                      "type" : "array",
+                      "items" : {
+                        "$ref" : "https://api.swaggerhub.com/domains/NicksDemoOrg/GlobalComponentsPaloAlto/v1#/components/schemas/Entitlement"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/entitlements/{entitlementID}" : {
+      "get" : {
+        "tags" : [ "Entitlements" ],
+        "summary" : "Retrieve one Entitlement record by ID",
+        "operationId" : "getEntitlementById",
+        "parameters" : [ {
+          "name" : "entitlementID",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Entitlement record retrieved",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "https://api.swaggerhub.com/domains/NicksDemoOrg/GlobalComponentsPaloAlto/v1#/components/schemas/Entitlement"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch" : {
+        "tags" : [ "Entitlements" ],
+        "summary" : "Update an entitlement record",
+        "operationId" : "updateEntitlement",
+        "parameters" : [ {
+          "name" : "entitlementID",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer"
+          }
+        }, {
+          "name" : "updateMask",
+          "in" : "query",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "required" : true,
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "https://api.swaggerhub.com/domains/NicksDemoOrg/GlobalComponentsPaloAlto/v1#/components/schemas/Entitlement"
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Entitlement updated successfully",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "https://api.swaggerhub.com/domains/NicksDemoOrg/GlobalComponentsPaloAlto/v1#/components/schemas/Entitlement"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/entitlements/search" : {
+      "post" : {
+        "tags" : [ "Entitlements" ],
+        "summary" : "Search entitlement records",
+        "operationId" : "searchEntitlements",
+        "requestBody" : {
+          "required" : true,
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "type" : "object",
+                "properties" : {
+                  "filter" : {
+                    "type" : "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Search results",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object",
+                  "properties" : {
+                    "results" : {
+                      "type" : "array",
+                      "items" : {
+                        "$ref" : "https://api.swaggerhub.com/domains/NicksDemoOrg/GlobalComponentsPaloAlto/v1#/components/schemas/Entitlement"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
